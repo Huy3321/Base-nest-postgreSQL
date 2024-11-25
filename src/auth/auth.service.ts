@@ -16,7 +16,7 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async signup(signUpDto: SignUpDto): Promise<{ token: string }> {
+    async signup(signUpDto: SignUpDto): Promise<{ token: string; refreshToken: string; user: User}> {
         const { name, email, password } = signUpDto;
 
 
@@ -31,12 +31,13 @@ export class AuthService {
         await this.usersRepository.save(user);
 
         const token = this.jwtService.sign({ id: user.id })
+        const refreshToken = this.jwtService.sign({ id: user.id }, { expiresIn: '7d' }); 
 
-        return { token };
+        return {user, token , refreshToken };
     }
 
 
-    async login(loginDto: loginDto): Promise<{ token: string }> {
+    async login(loginDto: loginDto): Promise<{ token: string; refreshToken: string; user: User }> {
         const { email, password } = loginDto;
 
         const user = await this.usersRepository.findOne({
@@ -53,8 +54,23 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password');
         }
         const token = this.jwtService.sign({ id: user.id });
+        const refreshToken = this.jwtService.sign({ id: user.id }, { expiresIn: '7d' }); 
 
-        return { token };
+        return {user, token, refreshToken  };
+    }
+
+    async refreshTokens(refreshToken: string): Promise<{ accessToken: string }> {
+        try {
+            // Xác thực Refresh Token
+            const payload = this.jwtService.verify(refreshToken);
+    
+            // Nếu hợp lệ, tạo Access Token mới
+            const accessToken = this.jwtService.sign({ id: payload.id });
+    
+            return { accessToken };
+        } catch (error) {
+            throw new UnauthorizedException('Invalid refresh token');
+        }
     }
 }
 

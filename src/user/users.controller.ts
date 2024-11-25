@@ -22,14 +22,14 @@ export class UsersController{
             // Trả về kết quả thành công
             return {
                 status: 200,
-                success: 1,
+
                 data: user,
             };
         } catch (error) {
             // Nếu có lỗi, trả về thông tin lỗi
             throw new HttpException({
                 status: HttpStatus.BAD_REQUEST,
-                success: 0,
+
                 message: 'User creation failed',  // Lỗi tùy chỉnh
             }, HttpStatus.BAD_REQUEST);
         }
